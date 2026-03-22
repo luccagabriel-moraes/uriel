@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Título da aba — {{ nome }} é preenchido pelo Flask com o nome da IA -->
+<title>{{ nome }} // SYSTEM</title>
+
+<!-- Fontes: Share Tech Mono para textos gerais, Orbitron para títulos cyberpunk -->
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+  VARIÁVEIS GLOBAIS DE COR
+  Para mudar o tema da interface inteira, edite apenas aqui
+  ============================================================ */
+  :root {
+    --cyan: #cc0000;                     /* Cor principal (bordas, títulos, botões) */
+    --pink: #ff3300;                     /* Cor secundária (mensagens do usuário) */
+    --purple: #6b0000;                   /* Cor de destaque (gradientes) */
+    --dark: #030000;                     /* Fundo principal da página */
+    --darker: #010000;                   /* Fundo mais escuro */
+    --panel: rgba(180, 0, 0, 0.05);      /* Fundo semitransparente dos painéis */
+    --border: rgba(180, 0, 0, 0.25);     /* Cor das bordas dos painéis */
+    --text: #ff6666;                     /* Cor do texto padrão */
+  }
+
+  /* Reset básico — remove margens e paddings padrão do navegador */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* Estilo base da página */
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ============================================================
+  GRADE DE FUNDO
+  Linhas horizontais e verticais sutis que criam o efeito
+  de grid cyberpunk no fundo da página
+  ============================================================ */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,26,26,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,26,26,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ============================================================
+  SCANLINES
+  Linhas horizontais finas que simulam o efeito
+  de monitor CRT / tela antiga
+  ============================================================ */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.1) 2px,
+      rgba(0,0,0,0.1) 4px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ============================================================
+  CONTAINER PRINCIPAL
+  Centraliza e organiza todo o conteúdo verticalmente
+  ============================================================ */
+  .container {
+    position: relative;
+    z-index: 1;           /* Fica acima do grid e scanlines */
+    max-width: 900px;
+    margin: 0 auto;       /* Centraliza horizontalmente */
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;            /* Espaço entre os blocos */
+  }
+
+  /* ============================================================
+  CABEÇALHO
+  Barra superior com o nome da IA e status do sistema
+  ============================================================ */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    backdrop-filter: blur(10px);  /* Efeito de vidro fosco */
+  }
+
+  /* Nome da IA no header com brilho neon (ex: URIEL // AI) */
+  .logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan), 0 0 40px var(--cyan);
+    letter-spacing: 4px;
+  }
+
+  /* Barra de status no lado direito (ONLINE / SYS:OK) */
+  .status-bar {
+    display: flex;
+    gap: 15px;
+    font-size: 11px;
+    color: rgba(0,255,245,0.5);
+  }
+
+  /* Ponto vermelho pulsante ao lado de "ONLINE" */
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff1a1a;
+    box-shadow: 0 0 8px #ff1a1a;
+    display: inline-block;
+    margin-right: 5px;
+    animation: pulse 2s infinite;
+  }
+
+  /* Animação de pulso usada no status dot */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ============================================================
+  SEÇÃO DO AVATAR
+  Área central com o vídeo do olho, anéis giratórios,
+  nome da IA e texto de status dinâmico
+  ============================================================ */
+  .avatar-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    position: relative;
+  }
+
+  /* Container que define o tamanho base do círculo do avatar */
+  .avatar-wrapper {
+    position: relative;
+    width: 220px;
+    height: 220px;
+  }
+
+  /* Anel giratório externo com gradiente vermelho
+  Usa técnica de border com gradiente via mask CSS */
+  .avatar-ring {
+    position: absolute;
+    inset: -15px;         /* 15px para fora do avatar */
+    border-radius: 50%;
+    border: 2px solid transparent;
+    background: linear-gradient(135deg, #cc0000, #660000, #ff3300) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    mask: calc();
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    animation: rotate 6s linear infinite;
+  }
+
+  /* Segundo anel mais externo — mais suave, gira ao contrário */
+  .avatar-ring-2 {
+    position: absolute;
+    inset: -25px;
+    border-radius: 50%;
+    border: 1px solid rgba(180,0,0,0.3);
+    animation: rotate 12s linear infinite reverse;
+  }
+
+  /* otação contínua dos anéis */
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Container circular do vídeo do olho
+  overflow:hidden corta o vídeo em formato circular
+  O vídeo é maior que o container para cobrir bordas pretas */
+  .avatar-placeholder {
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: #000;
+    border: 2px solid rgba(255,26,26,0.3);
+    overflow: hidden;
+    position: relative;  /* Necessário para posicionamento absoluto do vídeo */
+  }
+
+  /* ============================================================
+  ONDAS SONORAS
+  Três círculos que se expandem em sequência quando a IA fala
+  Ativadas via JavaScript adicionando a classe .active
+  ============================================================ */
+  .sound-waves {
+    position: absolute;
+    inset: -40px;
+    border-radius: 50%;
+    opacity: 0;           
+    transition: opacity 0.3s;
+  }
+
+  .sound-waves.active { opacity: 1; }
+
+  /* Cada onda individual */
+  .wave {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid #ff1a1a;
+    animation: wave-expand 1.5s ease-out infinite;
+    opacity: 0;
+  }
+
+  /* Atraso entre ondas para efeito sequencial */
+  .wave:nth-child(2) { animation-delay: 0.4s; }
+  .wave:nth-child(3) { animation-delay: 0.8s; }
+
+  /* Onda começa pequena e vai crescendo até sumir */
+  @keyframes wave-expand {
+    0% { transform: scale(0.8); opacity: 0.8; }
+    100% { transform: scale(1.4); opacity: 0; }
+  }
+
+  /* Nome da IA abaixo do avatar (ex: URIEL) */
+  .ai-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan);
+    margin-top: 35px;     /* Espaço entre avatar e nome */
+    text-align: center;
+    letter-spacing: 6px;
+  }
+
+  /* Status dinâmico — muda via JS conforme o estado da conversa
+     Possíveis valores: AGUARDANDO INPUT / GRAVANDO / PROCESSANDO / RESPONDENDO */
+  .ai-status {
+    font-size: 12px;
+    color: rgba(255,100,100,0.5);
+    text-align: center;
+    margin-top: 10px;
+    letter-spacing: 2px;
+  }
+
+  /* ============================================================
+  LOG DE CHAT
+  Área que exibe o histórico de mensagens da conversa
+  ============================================================ */
+  .chat-log {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    padding: 20px;
+    min-height: 200px;
+    max-height: 300px;
+    overflow-y: auto;     /* Scroll quando encher */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    backdrop-filter: blur(10px);
+  }
+
+  /* Estilo personalizado da barra de scroll */
+  .chat-log::-webkit-scrollbar { width: 4px; }
+  .chat-log::-webkit-scrollbar-track { background: transparent; }
+  .chat-log::-webkit-scrollbar-thumb { background: var(--cyan); }
+
+  /* Container de cada mensagem — aparece com animação */
+  .msg {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  /* Mensagem entra suavemente de baixo */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Rótulo acima da mensagem ([ VOCÊ ] ou [ URIEL ]) */
+  .msg-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Cores diferentes para usuário e IA */
+  .msg.user .msg-label { color: var(--pink); }
+  .msg.ai .msg-label { color: var(--cyan); }
+
+  /* Balão de texto com borda lateral colorida */
+  .msg-text {
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 10px 14px;
+    border-left: 2px solid;
+    background: rgba(0,0,0,0.3);
+  }
+
+  .msg.user .msg-text { border-color: var(--pink); color: #ffb3cb; }
+  .msg.ai .msg-text { border-color: var(--cyan); color: var(--text); }
+
+  /* Texto exibido quando não há mensagens ainda */
+  .empty-log {
+    color: rgba(0,255,245,0.2);
+    font-size: 12px;
+    text-align: center;
+    margin: auto;
+    letter-spacing: 2px;
+  }
+
+  /* ============================================================
+  CONTROLES
+  Área inferior com o botão circular de gravação
+  ============================================================ */
+  .controls {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  /* Botão circular principal */
+  .btn-falar {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    outline: none;
+  }
+
+  /* Interior do botão com gradiente e borda vermelha */
+  .btn-inner {
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(180,0,0,0.15), rgba(80,0,0,0.15));
+    border: 2px solid var(--cyan);
+    box-shadow: 0 0 20px rgba(180,0,0,0.4), inset 0 0 20px rgba(180,0,0,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+    transition: all 0.2s;
+  }
+
+  /* Hover — brilha mais ao passar o mouse */
+  .btn-falar:hover .btn-inner {
+    box-shadow: 0 0 40px rgba(200,0,0,0.7), inset 0 0 30px rgba(180,0,0,0.1);
+    background: linear-gradient(135deg, rgba(200,0,0,0.25), rgba(100,0,0,0.25));
+  }
+
+  /* Estado de gravação ativa — borda muda e botão pulsa */
+  .btn-falar.recording .btn-inner {
+    border-color: var(--pink);
+    box-shadow: 0 0 40px rgba(255,45,120,0.6), inset 0 0 30px rgba(255,45,120,0.1);
+    background: linear-gradient(135deg, rgba(255,45,120,0.2), rgba(157,0,255,0.2));
+    animation: recording-pulse 1s ease-in-out infinite;
+  }
+
+  @keyframes recording-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  /* Ícone do microfone */
+  .btn-icon { font-size: 28px; line-height: 1; }
+
+  /* Texto FALAR / PARAR abaixo do ícone */
+  .btn-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--cyan);
+  }
+
+  .btn-falar.recording .btn-label { color: var(--pink); }
+
+  /* ============================================================
+  DECORAÇÕES DOS CANTOS
+  Linhas em L nos 4 cantos da tela — efeito de "mira" cyberpunk
+  ============================================================ */
+  .corner {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    z-index: 2;
+  }
+  .corner::before, .corner::after {
+    content: '';
+    position: absolute;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+  }
+  .corner::before { width: 2px; height: 60px; }  /* Linha vertical */
+  .corner::after { width: 60px; height: 2px; }   /* Linha horizontal */
+  .corner.tl { top: 15px; left: 15px; }
+  .corner.tr { top: 15px; right: 15px; transform: scaleX(-1); }
+  .corner.bl { bottom: 15px; left: 15px; transform: scaleY(-1); }
+  .corner.br { bottom: 15px; right: 15px; transform: scale(-1); }
+
+  /* ============================================================
+  INDICADOR DE PROCESSAMENTO
+  Texto piscante que aparece enquanto a IA processa a resposta
+  Ativado via JavaScript adicionando a classe .visible
+  ============================================================ */
+  .processing {
+    display: none;
+    text-align: center;
+    font-size: 12px;
+    color: var(--cyan);
+    letter-spacing: 3px;
+    animation: blink 1s ease-in-out infinite;
+  }
+
+  .processing.visible { display: block; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Decorações dos 4 cantos da tela -->
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<div class="container">
+
+  <!-- CABEÇALHO: nome da IA e status -->
+  <header>
+    <div class="logo">{{ nome|upper }} // AI</div>
+    <div class="status-bar">
+      <span><span class="status-dot"></span>ONLINE</span>
+      <span>SYS:OK</span>
+    </div>
+  </header>
+
+  <!-- AVATAR: vídeo do olho + anéis giratórios + nome + status -->
+  <div class="avatar-section">
+    <div style="display:flex; flex-direction:column; align-items:center;">
+      <div class="avatar-wrapper">
+
+        <!-- Ondas sonoras (ativadas pelo JS quando a IA fala) -->
+        <div class="sound-waves" id="soundWaves">
+          <div class="wave"></div>
+          <div class="wave"></div>
+          <div class="wave"></div>
+        </div>
+
+        <!-- Anéis decorativos giratórios -->
+        <div class="avatar-ring"></div>
+        <div class="avatar-ring-2"></div>
+
+        <!-- Vídeo do olho — arquivo eye.mp4 na pasta static/
+        O vídeo é maior que o container (400px vs 220px)
+        para cobrir as bordas pretas do vídeo original -->
+        <div class="avatar-placeholder" id="avatar">
+          <video autoplay loop muted playsinline style="width:400px; height:400px; object-fit:cover; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">
+            <source src="/static/eye.mp4" type="video/mp4">
+          </video>
+        </div>
+
+      </div>
+
+      <!-- Nome e status dinâmico da IA -->
+      <div class="ai-name">{{ nome|upper }}</div>
+      <div class="ai-status" id="aiStatus">// AGUARDANDO INPUT //</div>
+    </div>
+  </div>
+
+  <!-- LOG DE CHAT: histórico de mensagens -->
+  <div class="chat-log" id="chatLog">
+    <div class="empty-log" id="emptyLog">[ NENHUMA TRANSMISSÃO AINDA ]</div>
+  </div>
+
+  <!-- PROCESSANDO: aparece enquanto a IA pensa -->
+  <div class="processing" id="processing">⬡ PROCESSANDO... ⬡</div>
+
+  <!-- BOTÃO DE FALAR: clique para iniciar/parar gravação -->
+  <div class="controls">
+    <button class="btn-falar" id="btnFalar" onclick="toggleRecording()">
+      <div class="btn-inner">
+        <div class="btn-icon" id="btnIcon">🎤</div>
+        <div class="btn-label" id="btnLabel">FALAR</div>
+      </div>
+    </button>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+VARIÁVEIS DE ESTADO DA GRAVAÇÃO
+============================================================ */
+let mediaRecorder = null;  // Objeto MediaRecorder do navegador
+let audioChunks = [];      // Array com pedaços do áudio gravado
+let recording = false;     // Booleano: está gravando ou não?
+
+/* ============================================================
+toggleRecording()
+Chamada ao clicar no botão — alterna entre gravar e parar
+============================================================ */
+async function toggleRecording() {
+  if (!recording) {
+    await startRecording();
+  } else {
+    stopRecording();
+  }
+}
+
+/* ============================================================
+startRecording()
+Pede permissão ao microfone e inicia a gravação de áudio
+============================================================ */
+async function startRecording() {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mediaRecorder = new MediaRecorder(stream);
+  audioChunks = [];
+
+  // Acumula pedaços de áudio conforme chegam
+  mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+  // Quando parar, chama processAudio automaticamente
+  mediaRecorder.onstop = processAudio;
+  mediaRecorder.start();
+
+  // Atualiza visual do botão para estado de gravação
+  recording = true;
+  document.getElementById('btnFalar').classList.add('recording');
+  document.getElementById('btnIcon').textContent = '⏹';
+  document.getElementById('btnLabel').textContent = 'PARAR';
+  document.getElementById('aiStatus').textContent = '// GRAVANDO... //';
+}
+
+/* ============================================================
+stopRecording()
+Para a gravação e mostra indicador de processamento
+============================================================ */
+function stopRecording() {
+  mediaRecorder.stop();
+  mediaRecorder.stream.getTracks().forEach(t => t.stop()); // Libera microfone
+  recording = false;
+
+  // Atualiza visual para estado de espera
+  document.getElementById('btnFalar').classList.remove('recording');
+  document.getElementById('btnIcon').textContent = '⏳';
+  document.getElementById('btnLabel').textContent = '...';
+  document.getElementById('aiStatus').textContent = '// PROCESSANDO... //';
+  document.getElementById('processing').classList.add('visible');
+}
+
+/* ============================================================
+processAudio()
+Converte o áudio gravado para base64 e envia ao servidor Flask.
+O Flask faz: Whisper (transcrição) → IA (resposta) → TTS (voz)
+============================================================ */
+async function processAudio() {
+  const blob = new Blob(audioChunks, { type: 'audio/webm' });
+  const buffer = await blob.arrayBuffer();
+
+  // Conversão segura para base64 (loop evita estouro de pilha)
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+  const base64 = btoa(binary);
+
+  try {
+    // Envia áudio em base64 para o backend Flask
+    const res = await fetch('/falar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audio: base64 })
+    });
+
+    const data = await res.json();
+    document.getElementById('processing').classList.remove('visible');
+
+    if (data.erro) {
+      // Mostra mensagem de erro no status
+      document.getElementById('aiStatus').textContent = '// ERRO: ' + data.erro + ' //';
+    } else {
+      // Adiciona mensagens no chat
+      addMessage('user', data.voce);  // O que o usuário disse
+      addMessage('ai', data.ia);      // O que a IA respondeu
+      document.getElementById('aiStatus').textContent = '// RESPONDENDO... //';
+
+      // Ativa animação de ondas sonoras
+      document.getElementById('soundWaves').classList.add('active');
+
+      // Verifica a cada 500ms se a IA terminou de falar
+      const checkSpeaking = setInterval(async () => {
+        const s = await fetch('/status').then(r => r.json());
+        if (!s.falando) {
+          clearInterval(checkSpeaking);
+          document.getElementById('soundWaves').classList.remove('active');
+          document.getElementById('aiStatus').textContent = '// AGUARDANDO INPUT //';
+          document.getElementById('btnIcon').textContent = '🎤';
+          document.getElementById('btnLabel').textContent = 'FALAR';
+        }
+      }, 500);
+    }
+  } catch (e) {
+    // Erro de conexão com o servidor
+    document.getElementById('processing').classList.remove('visible');
+    document.getElementById('aiStatus').textContent = '// ERRO DE CONEXÃO //';
+    document.getElementById('btnIcon').textContent = '🎤';
+    document.getElementById('btnLabel').textContent = 'FALAR';
+  }
+}
+
+/* ============================================================
+addMessage(tipo, texto)
+Adiciona uma nova mensagem no log de chat
+tipo: 'user' para o usuário, 'ai' para a IA
+============================================================ */
+function addMessage(tipo, texto) {
+  const log = document.getElementById('chatLog');
+  const empty = document.getElementById('emptyLog');
+  if (empty) empty.remove(); // Remove o placeholder "nenhuma transmissão"
+
+  const msg = document.createElement('div');
+  msg.className = `msg ${tipo}`;
+  const label = tipo === 'user' ? '[ VOCÊ ]' : '[ ' + document.title.split(' ')[0] + ' ]';
+  msg.innerHTML = '<div class="msg-label">' + label + '</div><div class="msg-text">' + texto + '</div>';
+  log.appendChild(msg);
+  log.scrollTop = log.scrollHeight; // Auto-scroll para a última mensagem
+}
+</script>
+</body>
+</html>
