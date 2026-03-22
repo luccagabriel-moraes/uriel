@@ -91,7 +91,11 @@ def processar_voz():
             nome = f.name
         audio_seg.export(nome, format="wav")
 
-        resultado = modelo_whisper.transcribe(nome, language="pt")
+        resultado = modelo_whisper.transcribe(
+        nome,
+        language="pt",  
+        initial_prompt="Conversa em português brasileiro, informal, com gírias."
+)
         os.unlink(nome)
         texto_transcrito = resultado["text"]
 
