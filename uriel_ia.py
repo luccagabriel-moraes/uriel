@@ -2,12 +2,10 @@ from flask import Flask, render_template, request, jsonify
 import whisper
 import sounddevice as sd
 import soundfile as sf
-import numpy as np
 import tempfile
 import os
 import threading
 import base64
-from kokoro import KPipeline
 import edge_tts
 import asyncio
 import requests
@@ -30,18 +28,8 @@ app = Flask(__name__)
 
 print("Carregando Whisper...")
 modelo_whisper = whisper.load_model("small")
-kokoro_pipeline = KPipeline(lang_code='p')
 historico = []
 is_speaking = False
-
-# Função de transcrever com whisper
-def transcrever(audio, sample_rate):
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-        nome = f.name
-    sf.write(nome, audio, sample_rate)
-    resultado = modelo_whisper.transcribe(nome, language="pt")
-    os.unlink(nome)
-    return resultado["text"]
 
 # função para responder usando o cerebro do Ollama
 def responder(texto_usuario):
@@ -57,7 +45,7 @@ def responder(texto_usuario):
     historico.append({"role": "assistant", "content": texto_resposta})
     return texto_resposta
 
-# Função de fala com o kokoro
+# Função de fala com o  Edge TTS
 async def _falar_async(texto):
     comunicar = edge_tts.Communicate(
         texto,
