@@ -203,9 +203,9 @@ Você fala → Navegador grava (MediaRecorder)
 | Groq modelo descontinuado | `llama3-8b-8192` foi removido | Trocar para `llama-3.3-70b-versatile` |
 | Erro de base64 | `spread operator` estoura a pilha | Usar loop `for` para converter |
 | Vídeo não preenche círculo | Vídeo menor que container | Vídeo 400px com `position:absolute` |
-| **Dolphin Mistral** — burro e lento | LLM muito fraca | Troquei por `mannix/llama3.1-8b-abliterated` — mais inteligente e sem restrições |
+| **Dolphin Mistral** — lento | LLM muito fraca | Troquei por `mannix/llama3.1-8b-abliterated` — mais inteligente e sem restrições |
 | **Whisper** — transcrição ruim e pesado | openai-whisper lento e usa muita RAM | Troquei por `faster-whisper` com `compute_type=int8` — mesma qualidade, 4x menos RAM |
-| **Edge TTS (Thalita)** — voz não combina | Voz feminina não combina com o tema | Troquei por `pt-BR-AntonioNeural` com pitch `-20Hz` — voz grave e sombria |
+| **Edge TTS (Thalita)** — voz não combina | Voz não combina com o tema | Troquei por `pt-BR-AntonioNeural` com pitch `-20Hz` — voz grave e sombria |
 
 ---
 
