@@ -123,13 +123,13 @@
     color: rgba(0,255,245,0.5);
   }
 
-  /* Ponto vermelho pulsante ao lado de "ONLINE" */
+  /* Ponto verde pulsante ao lado de "ONLINE" */
   .status-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #ff1a1a;
-    box-shadow: 0 0 8px #ff1a1a;
+    background: #34ff01;
+    box-shadow: 0 0 8px #34ff01;
     display: inline-block;
     margin-right: 5px;
     animation: pulse 2s infinite;
@@ -276,8 +276,9 @@
 
   /* Separador entre chat e input */
   .chat-panel .text-input-area {
-    border-top: 1px solid var(--border);
+    border-top: 0px solid var(--border);
     margin: 0;
+    padding: 15px;
   }
 
   /* ============================================================
@@ -579,8 +580,8 @@
       <div class="empty-log" id="emptyLog">[ NENHUMA TRANSMISSÃO AINDA ]</div>
     </div>
 
-    <!-- PROCESSANDO: aparece enquanto a IA pensa -->
-    <div class="processing" id="processing">⬡ PROCESSANDO... ⬡</div>
+    <!-- PROCESSANDO -->
+    <div class="processing" id="processing"></div>
 
     <!-- BARRA DE TEXTO: colada no fundo do painel -->
     <div class="text-input-area">
