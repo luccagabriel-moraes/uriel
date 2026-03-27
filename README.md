@@ -185,6 +185,46 @@ Você fala → Navegador grava (MediaRecorder)
 | Ondas sonoras | 3 círculos que se expandem quando a IA responde                    |
 
 ---
+<<<<<<< HEAD
+=======
+
+## 🔧 Rotas da API
+
+| Rota      | Método | Função                                      |
+| --------- | ------ | ------------------------------------------- |
+| `/`       | GET    | Serve a interface HTML                      |
+| `/falar`  | POST   | Recebe áudio, processa e retorna resposta   |
+| `/status` | GET    | Informa se a IA ainda está falando          |
+
+---
+
+## 🐛 Problemas Encontrados e Soluções
+
+| Problema | Causa | Solução |
+|---|---|---|
+| `venv\Scripts\activate` não funciona | PowerShell bloqueia scripts | Usar CMD |
+| TTS não instala | Python 3.14 incompatível | Instalar Python 3.11 |
+| Whisper dá erro de arquivo | Arquivo deletado antes de fechar | Abrir/fechar fora do `with` |
+| Groq modelo descontinuado | `llama3-8b-8192` foi removido | Trocar para `llama-3.3-70b-versatile` |
+| Erro de base64 | `spread operator` estoura a pilha | Usar loop `for` para converter |
+| Vídeo não preenche círculo | Vídeo menor que container | Vídeo 400px com `position:absolute` |
+| **Dolphin Mistral** — lento | LLM muito fraca | Troquei por `mannix/llama3.1-8b-abliterated` — mais inteligente e sem restrições |
+| **Whisper** — transcrição ruim e pesado | openai-whisper lento e usa muita RAM | Troquei por `faster-whisper` com `compute_type=int8` — mesma qualidade, 4x menos RAM |
+| **Edge TTS (Thalita)** — voz não combina | Voz não combina com o tema | Troquei por `pt-BR-AntonioNeural` com pitch `-20Hz` — voz grave e sombria |
+
+---
+
+## 🚀 Próximos Passos
+
+- [ ] Detectar voz automaticamente (sem apertar botão)
+- [ ] Salvar histórico de conversas em arquivo
+- [ ] Adicionar comandos especiais (abrir apps, tocar música)
+- [ ] Adicionar memória de longo prazo
+- [ ] Criar atalho de teclado global para ativar sem abrir o navegador
+
+---
+
+>>>>>>> 3336b8dc3b6613a8d6066dad25404fec79f6e137
 ## 👤 Autor
 
 Criado por **lucca** — projeto pessoal construído do zero em um único dia 🔥
