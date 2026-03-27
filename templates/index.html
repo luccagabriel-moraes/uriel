@@ -262,21 +262,37 @@
   }
 
   /* ============================================================
+  PAINEL DE CHAT
+  Agrupa o log + input numa caixa só
+  ============================================================ */
+  .chat-panel {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Separador entre chat e input */
+  .chat-panel .text-input-area {
+    border-top: 1px solid var(--border);
+    margin: 0;
+  }
+
+  /* ============================================================
   LOG DE CHAT
   Área que exibe o histórico de mensagens da conversa
   ============================================================ */
   .chat-log {
     flex: 1;
-    border: 1px solid var(--border);
-    background: var(--panel);
     padding: 20px;
     min-height: 200px;
     max-height: 300px;
-    overflow-y: auto;     /* Scroll quando encher */
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    backdrop-filter: blur(10px);
   }
 
   /* Estilo personalizado da barra de scroll */
@@ -443,6 +459,64 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
   }
+
+  /* ============================================================
+  BARRA DE TEXTO
+  Input para digitar mensagens + botão de enviar
+  ============================================================ */
+  .text-input-area {
+    display: flex;
+    gap: 10px;
+    padding: 0 4px;
+  }
+
+  .input-texto {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 12px 16px;
+    outline: none;
+    letter-spacing: 1px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  /* Brilha ao focar */
+  .input-texto:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(180,0,0,0.3);
+  }
+
+  .input-texto::placeholder {
+    color: rgba(255,100,100,0.3);
+    letter-spacing: 2px;
+  }
+
+  .btn-enviar {
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 10px rgba(180,0,0,0.2);
+  }
+
+  .btn-enviar:hover {
+    background: rgba(180,0,0,0.15);
+    box-shadow: 0 0 20px rgba(180,0,0,0.5);
+  }
+
+  /* Desabilitado enquanto processa */
+  .btn-enviar:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 </style>
 </head>
 <body>
@@ -497,13 +571,30 @@
     </div>
   </div>
 
-  <!-- LOG DE CHAT: histórico de mensagens -->
-  <div class="chat-log" id="chatLog">
-    <div class="empty-log" id="emptyLog">[ NENHUMA TRANSMISSÃO AINDA ]</div>
-  </div>
+  <!-- PAINEL DE CHAT: mensagens + input juntos -->
+  <div class="chat-panel">
 
-  <!-- PROCESSANDO: aparece enquanto a IA pensa -->
-  <div class="processing" id="processing">⬡ PROCESSANDO... ⬡</div>
+    <!-- LOG DE CHAT: histórico de mensagens -->
+    <div class="chat-log" id="chatLog">
+      <div class="empty-log" id="emptyLog">[ NENHUMA TRANSMISSÃO AINDA ]</div>
+    </div>
+
+    <!-- PROCESSANDO: aparece enquanto a IA pensa -->
+    <div class="processing" id="processing">⬡ PROCESSANDO... ⬡</div>
+
+    <!-- BARRA DE TEXTO: colada no fundo do painel -->
+    <div class="text-input-area">
+      <input
+        class="input-texto"
+        id="inputTexto"
+        type="text"
+        placeholder="// DIGITE UMA MENSAGEM..."
+        onkeydown="if(event.key==='Enter') enviarTexto()"
+      >
+      <button class="btn-enviar" id="btnEnviar" onclick="enviarTexto()">ENVIAR</button>
+    </div>
+
+  </div>
 
   <!-- BOTÃO DE FALAR: clique para iniciar/parar gravação -->
   <div class="controls">
@@ -652,6 +743,62 @@ function addMessage(tipo, texto) {
   msg.innerHTML = '<div class="msg-label">' + label + '</div><div class="msg-text">' + texto + '</div>';
   log.appendChild(msg);
   log.scrollTop = log.scrollHeight; // Auto-scroll para a última mensagem
+}
+/* ============================================================
+enviarTexto()
+Pega o texto digitado e envia para a rota /texto do Flask
+Reutiliza o mesmo checkSpeaking do processAudio!
+============================================================ */
+async function enviarTexto() {
+  const input = document.getElementById('inputTexto')
+  const texto = input.value.trim()
+
+  if (!texto) return  // não envia se estiver vazio
+
+  // Desabilita input e botão enquanto processa
+  input.disabled = true
+  document.getElementById('btnEnviar').disabled = true
+  document.getElementById('aiStatus').textContent = '// PROCESSANDO... //'
+  document.getElementById('processing').classList.add('visible')
+
+  try {
+    const res = await fetch('/texto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texto: texto })
+    })
+
+    const data = await res.json()
+    document.getElementById('processing').classList.remove('visible')
+    input.value = ''  // limpa o campo
+
+    if (data.erro) {
+      document.getElementById('aiStatus').textContent = '// ERRO: ' + data.erro + ' //'
+    } else {
+      addMessage('user', data.voce)  // mesma função que já existe!
+      addMessage('ai', data.ia)      // mesma função que já existe!
+      document.getElementById('aiStatus').textContent = '// RESPONDENDO... //'
+
+      // Mesma lógica do /falar — reutilizando o /status!
+      document.getElementById('soundWaves').classList.add('active')
+      const checkSpeaking = setInterval(async () => {
+        const s = await fetch('/status').then(r => r.json())
+        if (!s.falando) {
+          clearInterval(checkSpeaking)
+          document.getElementById('soundWaves').classList.remove('active')
+          document.getElementById('aiStatus').textContent = '// AGUARDANDO INPUT //'
+        }
+      }, 500)
+    }
+  } catch (e) {
+    document.getElementById('processing').classList.remove('visible')
+    document.getElementById('aiStatus').textContent = '// ERRO DE CONEXÃO //'
+  }
+
+  // Reabilita input e botão
+  input.disabled = false
+  document.getElementById('btnEnviar').disabled = false
+  input.focus()
 }
 </script>
 </body>

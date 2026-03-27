@@ -13,7 +13,7 @@
 
 **Uriel** é uma IA de voz construída do zero que roda 100% localmente no seu PC. Ela ouve o que você fala, entende, responde com personalidade própria e fala de volta — tudo sem depender de APIs pagas ou conexão com servidores externos.
 
-A interface é uma página web com tema cyberpunk em tons de vermelho escuro, com o Olho de Sauron animado como avatar.
+A interface é uma página web com tema cyberpunk em tons de vermelho escuro.
 
 ---
 
@@ -25,7 +25,7 @@ A interface é uma página web com tema cyberpunk em tons de vermelho escuro, co
 - 🔊 **Fala de volta** com voz masculina grave pt-BR (Edge TTS - Antonio Neural)
 - 💬 **Registro de bate-papo** mostrando o histórico da conversa
 - 🌊 **Animação** de ondas sonoras quando a IA está falando
-- 👁️ **Interface cyberpunk** com Olho de Sauron animado
+- 👁️ **Interface cyberpunk** 
 
 ---
 
@@ -49,7 +49,7 @@ uriel/
 ├── venv/                  # Ambiente virtual Python
 ├── uriel_ia.py            # Backend Flask — cérebro do projeto
 ├── static/
-│   └── eye.mp4            # Vídeo do Olho de Sauron
+│   └── eye.mp4            # foto ou video de perfil da ia
 ├── templates/
 │   └── index.html         # Interface web cyberpunk
 └── documentacao/          # Documentação do projeto (Obsidian)
@@ -144,6 +144,9 @@ http://localhost:5000
 - Fale o que quiser
 - Clique em **PARAR**
 - Aguarde uma resposta
+- Ou digite seu texto
+- Aperte enter 
+- Aguarde a resposta
 
 > ⚠️ O Ollama precisa estar rodando em segundo plano. Se não estiver, rode `ollama run mannix/llama3.1-8b-abliterated` antes.
 
@@ -174,7 +177,7 @@ Você fala → Navegador grava (MediaRecorder)
 | Elemento      | Descrição                                                          |
 | ------------- | ------------------------------------------------------------------ |
 | Header        | Nome da IA + status ONLINE piscante                                |
-| Avatar        | Vídeo do Olho de Sauron em círculo com anéis giratórios            |
+| Avatar        | Círculo com anéis giratórios     
 | Status        | Texto dinâmico: AGUARDANDO / GRAVANDO / PROCESSANDO / RESPONDENDO  |
 | Chat Log      | Histórico de mensagens com animação de entrada                     |
 | Botão FALAR   | Botão circular que pulsa durante gravação                          |
@@ -182,43 +185,6 @@ Você fala → Navegador grava (MediaRecorder)
 | Ondas sonoras | 3 círculos que se expandem quando a IA responde                    |
 
 ---
-
-## 🔧 Rotas da API
-
-| Rota      | Método | Função                                      |
-| --------- | ------ | ------------------------------------------- |
-| `/`       | GET    | Serve a interface HTML                      |
-| `/falar`  | POST   | Recebe áudio, processa e retorna resposta   |
-| `/status` | GET    | Informa se a IA ainda está falando          |
-
----
-
-## 🐛 Problemas Encontrados e Soluções
-
-| Problema | Causa | Solução |
-|---|---|---|
-| `venv\Scripts\activate` não funciona | PowerShell bloqueia scripts | Usar CMD |
-| TTS não instala | Python 3.14 incompatível | Instalar Python 3.11 |
-| Whisper dá erro de arquivo | Arquivo deletado antes de fechar | Abrir/fechar fora do `with` |
-| Groq modelo descontinuado | `llama3-8b-8192` foi removido | Trocar para `llama-3.3-70b-versatile` |
-| Erro de base64 | `spread operator` estoura a pilha | Usar loop `for` para converter |
-| Vídeo não preenche círculo | Vídeo menor que container | Vídeo 400px com `position:absolute` |
-| **Dolphin Mistral** — burro e lento | LLM muito fraca | Troquei por `mannix/llama3.1-8b-abliterated` — mais inteligente e sem restrições |
-| **Whisper** — transcrição ruim e pesado | openai-whisper lento e usa muita RAM | Troquei por `faster-whisper` com `compute_type=int8` — mesma qualidade, 4x menos RAM |
-| **Edge TTS (Thalita)** — voz não combina | Voz feminina não combina com o tema | Troquei por `pt-BR-AntonioNeural` com pitch `-20Hz` — voz grave e sombria |
-
----
-
-## 🚀 Próximos Passos
-
-- [ ] Detectar voz automaticamente (sem apertar botão)
-- [ ] Salvar histórico de conversas em arquivo
-- [ ] Adicionar comandos especiais (abrir apps, tocar música)
-- [ ] Adicionar memória de longo prazo
-- [ ] Criar atalho de teclado global para ativar sem abrir o navegador
-
----
-
 ## 👤 Autor
 
 Criado por **lucca** — projeto pessoal construído do zero em um único dia 🔥

@@ -75,6 +75,22 @@ def falar(texto):
 def index():
     return render_template('index.html', nome=NOME_DA_IA)
 
+@app.route('/texto', methods=['POST'])
+def processar_texto():
+    try:
+        data = request.json
+        texto_usuario = data['texto']
+        resposta = responder(texto_usuario)
+        threading.Thread(target=falar, args=(resposta,)).start()
+        return jsonify({
+            "voce": texto_usuario,
+            "ia": resposta
+        })
+    except Exception as e:
+        return jsonify({"erro": str(e)})
+
+
+
 @app.route('/falar', methods=['POST'])
 def processar_voz():
     try:
@@ -84,12 +100,12 @@ def processar_voz():
         audio_b64 = data['audio']
         audio_bytes = base64.b64decode(audio_b64)
 
-        # Converte webm para wav
         audio_seg = AudioSegment.from_file(io.BytesIO(audio_bytes), format="webm")
 
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
             nome = f.name
         audio_seg.export(nome, format="wav")
+
         segments, _ = modelo_whisper.transcribe(
             nome,
             language="pt",
@@ -99,10 +115,14 @@ def processar_voz():
         texto_transcrito = "".join([s.text for s in segments])
         del segments
         gc.collect()
+
         if not texto_transcrito:
             return jsonify({"erro": "Não entendi nada"})
+
         resposta = responder(texto_transcrito)
+
         threading.Thread(target=falar, args=(resposta,)).start()
+
         return jsonify({
             "voce": texto_transcrito,
             "ia": resposta
